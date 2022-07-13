@@ -49,9 +49,9 @@ const server = net.createServer().on("connection", socket => {
             if(!fs.existsSync(`./packages/${platform}/${packageName}/${version}/${packageName}_${version}_${platform}`))
                 return socket.write(`\x01Cant find that package\x00`, () => socket.end());
             const package = fs.statSync(`./packages/${platform}/${packageName}/${version}/${packageName}_${version}_${platform}`);
-            const bufSize = Buffer.alloc(6);
+            const bufSize = Buffer.alloc(4);
             const dependencies = dep2buffer(getDepedencies(packageName, platform, version));
-            bufSize.writeUintBE(package.size,0,6);
+            bufSize.writeUintBE(package.size,0,4);
             socket.write(`\x00${packageName}\x00${platform}\x00${version}\x00`, () => socket.write(bufSize, () => socket.write(dependencies)));
         }else if(opcode == 1){
             if(!versionInClient)
