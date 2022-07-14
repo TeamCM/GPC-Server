@@ -1,5 +1,6 @@
 const net = require("net");
 const fs = require("fs");
+const {createHash} = require("crypto");
 
 function getDepedencies(name,platform,version){
     const depedencies = fs.readFileSync(`./packages/${platform}/${name}/${version}/dependencies`,{encoding:"ascii"});
@@ -58,11 +59,13 @@ const server = net.createServer().on("connection", socket => {
                 return socket.write(`\x01No version\x00`, () => socket.end());
             if(!fs.existsSync(`./packages/${platform}/${packageName}/${versionInClient}/${packageName}_${versionInClient}_${platform}`))
                 return socket.write(`\x01Cant find that package\x00`, () => socket.end());
+            const content = fs.readFileSync(`./packages/${platform}/${packageName}/${versionInClient}/${packageName}_${versionInClient}_${platform}`);
+            const hash = createHash("sha256").update(content).digest();
+            console.log(hash.length);
             console.log(packageName);
             socket.write(Buffer.of(0), () => {
-                console.log("OK SEND");
-                socket.write(fs.readFileSync(`./packages/${platform}/${packageName}/${versionInClient}/${packageName}_${versionInClient}_${platform}`), () => {
-                    console.log("DOWNLOAD OK");
+                socket.write(hash, () => {
+                    socket.write(content, () => console.log("OK!"));
                 });
             });
         }else socket.end();
